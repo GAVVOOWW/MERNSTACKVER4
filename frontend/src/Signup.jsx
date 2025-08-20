@@ -5,7 +5,7 @@ import ReCAPTCHA from 'react-google-recaptcha';
 import { BsShop } from 'react-icons/bs';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'; // Default test key
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6Lcso4ErAAAAAPt7pVTU3dzevrxQFaKu6_Obv4bi'; // Default test key
 
 const Signup = () => {
     const [formData, setFormData] = useState({

@@ -2017,7 +2017,7 @@ app.post("/api/registeruser", async (req, res) => {
   console.log("=== REGISTRATION REQUEST RECEIVED ===");
   console.log("Request body:", req.body);
 
-  const { name, email, password, phone, role } = req.body; // Removed address
+  const { name, email, password, phone, role, recaptcha } = req.body; // Add recaptcha
 
   // Enhanced validation with specific error messages
   const validationErrors = [];
@@ -2059,6 +2059,40 @@ app.post("/api/registeruser", async (req, res) => {
   }
 
   try {
+    // --- NEW: reCAPTCHA Server-Side Verification ---
+    if (!recaptcha) {
+      console.log("❌ reCAPTCHA token missing");
+      return res.status(400).json({
+        success: false,
+        message: "reCAPTCHA verification is required.",
+      });
+    }
+
+    const recaptchaSecret = process.env.RECAPTCHA_SECRET_KEY || '6Lcso4ErAAAAAEyS8iu8noRFyrQqwPknY4tTAR8j';
+    if (!recaptchaSecret) {
+      console.error("❌ RECAPTCHA_SECRET_KEY is not set in the environment variables.");
+      // This is a server configuration issue, so we shouldn't expose details to the client.
+      return res.status(500).json({
+        success: false,
+        message: "Server error during registration. Please try again later.",
+      });
+    }
+    
+    const verificationUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecret}&response=${recaptcha}&remoteip=${req.ip}`;
+    
+    const { data: recaptchaResult } = await axios.post(verificationUrl);
+
+    if (!recaptchaResult.success) {
+      console.log("❌ reCAPTCHA verification failed:", recaptchaResult['error-codes']);
+      return res.status(400).json({
+        success: false,
+        message: "Failed to verify reCAPTCHA. Please try again.",
+      });
+    }
+    
+    console.log("✅ reCAPTCHA verified successfully.");
+    // --- END: reCAPTCHA Verification ---
+
     // Check for existing user (case insensitive)
     console.log("🔍 Checking for existing user with email:", email);
     const existingUser = await User.findOne({
