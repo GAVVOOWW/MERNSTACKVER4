@@ -1692,45 +1692,50 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
     const itemIds = processedItems.map((item) => item.item);
     const itemDetails = await Item.find({ _id: { $in: itemIds } });
 
-    const hasCustomizableItems = itemDetails.some(
-      (item) => item.is_customizable
-    );
+    const hasCustomizableItems = itemDetails.some((item) => item.is_customizable);
     console.log("Has customizable items:", hasCustomizableItems);
 
-    // Calculate down payment and balance
+    // --- FIXED PAYMENT CALCULATION LOGIC ---
+    // We now respect the paymentType ("full_payment"|"down_payment") and the actual amount paid that the
+    // frontend sends via `paidAmount`. This prevents the backend from incorrectly marking a *full payment*
+    // for customizable carts as a partial / down-payment.
+    const { paymentType = "full_payment", paidAmount } = req.body; // paidAmount == amount actually charged now
+
     let downPayment = 0;
     let balance = 0;
-    let paymentStatus = "Downpayment Received"; // Default status for down payment
-    let initialStatus = "On Process";
+    let paymentStatus = "Pending";
+    let initialStatus = "Pending";
 
     if (hasCustomizableItems) {
-      // Customizable items require 30% down payment (frontend logic)
-      downPayment = Math.round(amount * 0.3);
-      balance = amount - downPayment;
-      paymentStatus = "Downpayment Received";
-      initialStatus = "On Process"; // Will change to 'On Process' after down payment
-      console.log("Customizable items detected - 30% down payment required");
+      if (paymentType === "full_payment") {
+        // Customer settled the entire amount for customized items upfront
+        downPayment = amount; // full amount becomes the initial payment
+        balance = 0;
+        paymentStatus = "Fully Paid";
+        initialStatus = deliveryOption === "pickup" ? "Ready for Pickup" : "On Process";
+      } else {
+        // Customer chose down-payment (30% of custom + full of normal) – the frontend already computed `paidAmount`
+        downPayment = paidAmount; // amount actually charged now
+        balance = amount - downPayment;
+        paymentStatus = "Downpayment Received";
+        initialStatus = "On Process";
+      }
     } else {
-      // Regular items require full payment
+      // No customizable items → always full payment
       downPayment = amount;
       balance = 0;
-      paymentStatus = "Fully Paid"; // This will be updated after payment confirmation
-
-      // Set initial status based on delivery option for regular items
-      if (deliveryOption === "shipping") {
-        initialStatus = "On Process"; // Auto-process for shipping
-      } else if (deliveryOption === "pickup") {
-        initialStatus = "Ready for Pickup"; // Ready for pickup immediately
-      }
-      console.log("Regular items detected - full payment required");
+      paymentStatus = "Fully Paid";
+      initialStatus = deliveryOption === "pickup" ? "Ready for Pickup" : "On Process";
     }
 
-    console.log("Payment breakdown:", {
+    console.log("Payment breakdown (fixed):", {
       totalAmount: amount,
       downPayment,
       balance,
       paymentStatus,
       initialStatus,
+      paymentType,
+      paidAmount,
     });
 
     // Create the order with new payment fields

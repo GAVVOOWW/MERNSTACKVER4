@@ -420,6 +420,8 @@ const CheckoutPage = () => {
         actualPaymentAmount: getActualPaymentAmount()
       }
       : {
+        // BUG: The logic for determining payment options is flawed. When hasCustomizedItems() is true, 
+        // the paymentType defaults to 'down_payment' if the user does not explicitly select 'full_payment', leading to incorrect order details.
         paymentType: "full_payment",
         hasCustomizedItems: false,
         fullAmount: total,
@@ -828,16 +830,7 @@ const CheckoutPage = () => {
             <p className="text-muted mb-0">Complete your order safely and securely</p>
           </div>
           <div className="d-flex gap-2">
-            {selectedItems.length > 0 && (
-              <Button
-                variant="outline-success"
-                onClick={openRecommendationModal}
-                className="d-flex align-items-center"
-              >
-                <BsLightbulb className="me-2" />
-                Get AI Recommendations
-              </Button>
-            )}
+            {/* AI Recommendations button removed */}
             <Badge bg="primary" className="px-3 py-2">
               <BsShield className="me-1" />
               SSL Secured
@@ -1252,54 +1245,7 @@ const CheckoutPage = () => {
                 </Card>
               )}
 
-              {/* Payment Method */}
-              <Card className="border-0 shadow-sm mb-4">
-                <Card.Header className="bg-white border-bottom">
-                  <div className="d-flex align-items-center">
-                    <div
-                      className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-                      style={{ width: "32px", height: "32px" }}
-                    >
-                      <span className="fw-bold">{hasCustomizedItems() ? (deliveryOption === "pickup" ? "4" : "5") : (deliveryOption === "pickup" ? "3" : "4")}</span>
-                    </div>
-                    <h5 className="mb-0 fw-semibold">Payment Method</h5>
-                  </div>
-                </Card.Header>
-                <Card.Body className="p-4">
-                  <Row className="g-3">
-                    <Col md={6}>
-                      <Card
-                        className={`cursor-pointer border-2 ${paymentMethod === "card" ? "border-primary bg-primary bg-opacity-10" : "border-light"
-                          }`}
-                        onClick={() => setPaymentMethod("card")}
-                      >
-                        <Card.Body className="text-center p-4">
-                          <BsCreditCard2Front className="text-primary mb-2" size={32} />
-                          <h6 className="fw-bold mb-1">Credit / Debit Card</h6>
-                          <small className="text-muted">Visa, Mastercard, American Express</small>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                    <Col md={6}>
-                      <Card
-                        className={`cursor-pointer border-2 ${paymentMethod === "gcash" ? "border-success bg-success bg-opacity-10" : "border-light"
-                          }`}
-                        onClick={() => setPaymentMethod("gcash")}
-                      >
-                        <Card.Body className="text-center p-4">
-                          <BsWallet2 className="text-success mb-2" size={32} />
-                          <h6 className="fw-bold mb-1">GCash</h6>
-                          <small className="text-muted">Pay with your GCash wallet</small>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  </Row>
-                  <Alert variant="info" className="mt-3 mb-0">
-                    <BsShield className="me-2" />
-                    <small>You will be redirected to our secure payment partner to complete your transaction.</small>
-                  </Alert>
-                </Card.Body>
-              </Card>
+              {/* Payment Method section removed as per request */}
 
               {/* Order Items Review */}
               <Card className="border-0 shadow-sm">
