@@ -7,7 +7,7 @@ dotenv.config();
 // Initialize the OpenAI client
 // It's best practice to use environment variables for your API key
 const openai = new OpenAI({
-  apiKey: 'sk-proj-1234567890', 
+  apiKey: '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', 
 });
 
 
